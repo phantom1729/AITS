@@ -1,0 +1,205 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Server Connect — Hacker UI (HD)</title>
+  <style>
+    :root{--bg:#0b1020;--panel:#071025;--glow:#00e6a7;--muted:#94a3b8}
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+    body{background:radial-gradient(1200px 600px at 10% 10%, rgba(0,230,167,0.06), transparent), linear-gradient(180deg,#05060a 0%, #071025 60%);color:#cbd5e1}
+    .app{display:flex;gap:24px;height:100vh;padding:36px;box-sizing:border-box}/* left - monitor */
+.monitor{flex:1;min-width:420px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));border-radius:14px;padding:22px;box-shadow:0 10px 40px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02)}
+.header{display:flex;align-items:center;gap:12px}
+.dots{display:flex;gap:6px}
+.dot{width:12px;height:12px;border-radius:50%;background:#ff5f56;box-shadow:0 0 12px rgba(255,95,86,0.12)}
+.dot.y{background:#ffbd2e}
+.dot.g{background:#27c93f}
+.title{margin-left:auto;font-weight:600;color:var(--muted)}
+
+.screen{margin-top:18px;background:#02040a;border-radius:10px;padding:18px;min-height:60vh;position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.03)}
+.console{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;font-size:14px;line-height:1.5;color:#c7f7e9;white-space:pre-wrap}
+.console .muted{color:var(--muted)}
+.status{position:absolute;right:18px;top:18px;background:rgba(255,255,255,0.02);padding:8px 12px;border-radius:10px;color:var(--muted);font-weight:600}
+
+.progress-wrap{display:flex;gap:12px;align-items:center;margin-top:14px}
+.progress{flex:1;background:rgba(255,255,255,0.03);height:12px;border-radius:8px;overflow:hidden}
+.bar{height:100%;width:0%;background:linear-gradient(90deg,var(--glow),#00a88f);box-shadow:0 6px 14px rgba(0,230,167,0.12)}
+.badge{font-size:12px;color:var(--muted);min-width:90px}
+
+/* right - outputs */
+.sidebar{width:420px;display:flex;flex-direction:column;gap:18px}
+.card{background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.02)}
+h3{margin:0 0 8px 0;color:#e6fff6}
+
+.files{display:grid;grid-template-columns:1fr;gap:12px}
+.file{display:flex;gap:12px;align-items:center;padding:10px;border-radius:10px;background:rgba(0,0,0,0.12);cursor:pointer;transition:transform .18s ease, box-shadow .18s ease}
+.file:hover{transform:translateY(-6px);box-shadow:0 14px 30px rgba(0,0,0,0.6)}
+.thumb{width:64px;height:48px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--muted);font-size:12px}
+.meta{flex:1}
+.meta .name{font-weight:700}
+.meta .link{font-size:12px;color:var(--muted);word-break:break-all}
+.openbtn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 10px;border-radius:8px;color:var(--muted);font-weight:700}
+
+.preview{margin-top:12px;border-radius:10px;overflow:hidden;height:220px;border:1px solid rgba(255,255,255,0.02)}
+iframe{width:100%;height:100%;border:0}
+
+/* small screen adjustments */
+@media (max-width:980px){.app{flex-direction:column;padding:18px}.sidebar{width:100%}.monitor{min-width:unset}}
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="monitor">
+      <div class="header">
+        <div class="dots"><div class="dot"></div><div class="dot y"></div><div class="dot g"></div></div>
+        <div class="title">Status: Simulated Network — Secure</div>
+      </div><div class="screen">
+    <div class="status" id="status">Idle</div>
+    <div class="console" id="console">
+      <!-- Console output will be typed here by JS -->
+    </div>
+
+    <div style="position:absolute;left:18px;bottom:18px;right:18px">
+      <div class="progress-wrap">
+        <div class="badge">Handshake</div>
+        <div class="progress"><div class="bar" id="bar1"></div></div>
+        <div class="badge" id="pct1">0%</div>
+      </div>
+      <div class="progress-wrap" style="margin-top:8px">
+        <div class="badge">Server Access</div>
+        <div class="progress"><div class="bar" id="bar2"></div></div>
+        <div class="badge" id="pct2">0%</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sidebar">
+  <div class="card">
+    <h3>Output Files</h3>
+    <div class="files" id="fileList" style="display:none">
+      <div class="file" onclick="openPreview('1Rw_gdxbUlZVPCTx-M4QZmu5iMrnSmQB1','https://drive.google.com/file/d/1Rw_gdxbUlZVPCTx-M4QZmu5iMrnSmQB1/view?usp=drivesdk')">
+        <div class="thumb">PDF</div>
+        <div class="meta">
+          <div class="name">Report_1</div>
+          <div class="link">https://drive.google.com/file/d/1Rw_gdxbUlZVPCTx-M4QZmu5iMrnSmQB1/view</div>
+        </div>
+        <button class="openbtn" onclick="openLink(event,'https://drive.google.com/file/d/1Rw_gdxbUlZVPCTx-M4QZmu5iMrnSmQB1/view?usp=drivesdk')">Open</button>
+      </div>
+
+      <div class="file" onclick="openPreview('1cXty_FBk8HAuHA7Fh8_UJb8NqchCPDuD','https://drive.google.com/file/d/1cXty_FBk8HAuHA7Fh8_UJb8NqchCPDuD/view?usp=drivesdk')">
+        <div class="thumb">IMG</div>
+        <div class="meta">
+          <div class="name">Snapshot_2</div>
+          <div class="link">https://drive.google.com/file/d/1cXty_FBk8HAuHA7Fh8_UJb8NqchCPDuD/view</div>
+        </div>
+        <button class="openbtn" onclick="openLink(event,'https://drive.google.com/file/d/1cXty_FBk8HAuHA7Fh8_UJb8NqchCPDuD/view?usp=drivesdk')">Open</button>
+      </div>
+    </div>
+
+    <div class="preview" id="preview">
+      <iframe id="iframePreview" src="about:blank"></iframe>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-weight:700">Controls</div>
+      <button class="openbtn" id="replay">Replay Sequence</button>
+    </div>
+    <p style="margin-top:10px;color:var(--muted);font-size:13px">Tip: Click a file to preview it here or click "Open" to open the file in a new tab.</p>
+  </div>
+</div>
+
+  </div>  <script>
+    const consoleEl = document.getElementById('console');
+    const statusEl = document.getElementById('status');
+    const bar1 = document.getElementById('bar1');
+    const bar2 = document.getElementById('bar2');
+    const pct1 = document.getElementById('pct1');
+    const pct2 = document.getElementById('pct2');
+    const iframe = document.getElementById('iframePreview');
+
+    const messages = [
+      {t:0, txt:'Initializing network adapters...'},
+      {t:600, txt:'Resolving DNS: secure.pw.com'},
+      {t:1400, txt:'Performing TLS handshake with server-02.gateway'},
+      {t:2200, txt:'Establishing encrypted channel (AES-256)...'},
+      {t:3200, txt:'Authenticating token...'},
+      {t:4200, txt:'Token accepted — session ID: ' + generateId()},
+      {t:5200, txt:'Requesting file index from remote storage...'},
+      {t:6400, txt:'Streaming file metadata...'},
+      {t:7600, txt:'Mounting virtual drive...'},
+      {t:8800, txt:'Access granted. Files available.'},
+      {t:10000, txt:'Profile access initiated...'},
+      {t:11200, txt:'Disserver axist detected. Bypassing security protocols...'},
+      {t:12400, txt:'Getting file metadata from server...'},
+      {t:13600, txt:'Decrypting file headers...'},
+      {t:14800, txt:'Verifying integrity checksums...'},
+      {t:16000, txt:'Loading additional modules...'},
+      {t:17200, txt:'Establishing secondary connection...'},
+      {t:18400, txt:'Fetching user profile data...'},
+      {t:19600, txt:'Axist server response: OK'},
+      {t:20800, txt:'Compiling file list...'},
+      {t:22000, txt:'Finalizing access permissions...'},
+      {t:23200, txt:'All systems green. Files unlocked.'}
+    ];
+
+    function generateId(){
+      return Math.random().toString(36).slice(2,10).toUpperCase();
+    }
+
+    function typeText(text, delay=18){
+      return new Promise(resolve=>{
+        let i=0;
+        const id = setInterval(()=>{
+          consoleEl.textContent += text[i]||'';
+          i++;
+          if(i>text.length){ clearInterval(id); consoleEl.textContent += '\n'; resolve(); }
+        }, delay);
+      });
+    }
+
+    async function runSequence(){
+      consoleEl.textContent='';
+      statusEl.textContent='Connecting...';
+      await sleep(300);
+      for(let i=0;i<messages.length;i++){
+        await typeText('> ' + messages[i].txt);
+        // update progress bars roughly as sequence progresses
+        const p = Math.round(((i+1)/messages.length)*100);
+        updateBar(bar1,p,pct1);
+        updateBar(bar2, Math.min(100, p + Math.floor(Math.random()*12)), pct2);
+        await sleep(500 + Math.random()*400);
+      }
+      statusEl.textContent='Connected — Secure Session';
+      // smooth finish
+      updateBar(bar1,100,pct1);
+      updateBar(bar2,100,pct2);
+      await sleep(400);
+      consoleEl.textContent += '\n> OUTPUT: File(s) ready.\n> (Files unlocked after sequence)\n> Showing files now...\n> Available Files:\n>  - Report_1 (Drive Link)\n>  - Snapshot_2 (Drive Link)\n> Click from sidebar to preview.\n> 1. Report_1 → https://drive.google.com/file/d/1Rw_gdxbUlZVPCTx-M4QZmu5iMrnSmQB1/view\n> 2. Snapshot_2 → https://drive.google.com/file/d/1cXty_FBk8HAuHA7Fh8_UJb8NqchCPDuD/view\n> Files ready at sidebar → Preview / Open\n';
+      document.getElementById('fileList').style.display='grid';
+    }
+
+    function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+    function updateBar(el,val,pctEl){ el.style.width=val+'%'; pctEl.textContent=val+'%'; }
+
+    function openLink(ev,url){ ev.stopPropagation(); window.open(url,'_blank'); }
+
+    function openPreview(id,url){
+      // Use the Google Drive preview viewer — NOTE: if file is private it may not show inside iframe.
+      const preview = 'https://drive.google.com/file/d/' + id + '/preview';
+      iframe.src = preview;
+      // Also highlight selection (small visual feedback)
+      statusEl.textContent = 'Previewing: ' + id;
+    }
+
+    document.getElementById('replay').addEventListener('click', ()=>{ runSequence(); });
+
+    // start automatically
+    runSequence();
+  </script></body>
+</html>
