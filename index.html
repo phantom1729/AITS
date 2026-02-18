@@ -2,169 +2,314 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Phantom server's - PW_SERVER_v4</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Raksha Elite - Cyber HUD</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
     <style>
-        body, html {
-            background-color: #000;
-            color: #0f0;
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            overflow: hidden;
-            height: 100%;
+        :root {
+            --bg-gradient: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(0, 210, 255, 0.2);
+            --neon-blue: #00f2ff;
+            --neon-pink: #ff0055;
+            --alert-red: #ff3333;
         }
 
-        #matrix-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            opacity: 0.15;
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-gradient);
+            color: #fff; margin: 0; padding: 0;
+            min-height: 100vh; user-select: none;
+            text-align: center; overflow-x: hidden; padding-bottom: 90px;
         }
 
-        #overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            padding: 40px;
-            box-sizing: border-box;
-            background: radial-gradient(circle, transparent 60%, rgba(0,20,0,0.8) 100%);
-            pointer-events: none;
+        /* --- 1. KINETIC BACKGROUND --- */
+        #bg-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1; opacity: 0.4;
         }
 
-        .terminal-window {
-            background: rgba(0, 10, 0, 0.85);
-            border: 1px solid #0f0;
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
-            width: 80%;
-            max-width: 900px;
-            height: 500px;
-            margin: 50px auto;
-            padding: 20px;
-            overflow-y: hidden;
-            position: relative;
+        /* --- 5. DATA STREAM & HEADER --- */
+        .header-container {
+            padding: 50px 20px 30px;
+            background: rgba(0, 0, 0, 0.6);
+            border-bottom: 1px solid var(--neon-blue);
+            border-bottom-left-radius: 50px; border-bottom-right-radius: 50px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 30px rgba(0, 210, 255, 0.1);
         }
 
-        .line { margin-bottom: 5px; font-size: 14px; text-shadow: 0 0 5px #0f0; }
-        .green { color: #0f0; }
-        .white { color: #fff; text-shadow: 0 0 8px #fff; }
-        .red { color: #f00; text-shadow: 0 0 5px #f00; }
-        
-        #progress-bar {
-            width: 0%;
-            height: 15px;
-            background: #0f0;
-            margin-top: 10px;
-            box-shadow: 0 0 10px #0f0;
+        /* --- 2. BIOMETRIC PULSE SHIELD --- */
+        .shield-wrapper { 
+            position: relative; width: 140px; height: 140px; margin: 0 auto 20px; cursor: pointer;
+        }
+        .pulse-ring {
+            position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
+            border: 2px solid var(--neon-blue); border-radius: 50%;
+            animation: ring-rotate 4s linear infinite; opacity: 0.5;
+            border-top-color: transparent; border-bottom-color: transparent;
+        }
+        .pulse-ring-inner {
+            position: absolute; top: -5px; left: -5px; right: -5px; bottom: -5px;
+            border: 1px dashed var(--neon-pink); border-radius: 50%;
+            animation: ring-rotate 3s linear reverse infinite; opacity: 0.3;
+        }
+        @keyframes ring-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .shield-outer { 
+            width: 100%; height: 100%; 
+            background: linear-gradient(135deg, #444, #111); 
+            clip-path: circle(50%); display: flex; align-items: center; justify-content: center;
+            box-shadow: inset 0 0 20px var(--neon-blue);
+        }
+        .shield-inner { 
+            width: 90%; height: 90%; background-color: #000; 
+            background-size: cover; background-position: center; clip-path: circle(50%);
+            position: relative; overflow: hidden;
+        }
+        /* Scanning Effect */
+        .shield-inner::after {
+            content: ""; position: absolute; top: -100%; left: 0; width: 100%; height: 50%;
+            background: linear-gradient(to bottom, transparent, var(--neon-blue), transparent);
+            opacity: 0.4; animation: scan 2.5s infinite linear;
+        }
+        @keyframes scan { 0% { top: -100%; } 100% { top: 100%; } }
+
+        .user-name { font-family: 'Orbitron', sans-serif; font-size: 20px; color: var(--neon-blue); letter-spacing: 2px; }
+
+        /* --- 4. GLASSMORPHISM 2.0 BUTTONS --- */
+        .content-container { padding: 30px 25px; }
+        .btn {
+            width: 100%; border-radius: 12px; padding: 18px; margin-bottom: 18px;
+            font-family: 'Orbitron', sans-serif; font-weight: 600; font-size: 13px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px;
+            color: #fff; background: var(--glass-bg); 
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(15px); transition: 0.4s;
+            box-shadow: inset 0 0 10px rgba(0, 210, 255, 0.05);
+            text-transform: uppercase;
+        }
+        .btn:active { transform: scale(0.96); box-shadow: 0 0 20px var(--neon-blue); }
+
+        .btn-sos { 
+            background: linear-gradient(135deg, #d50000, #4a0000); 
+            height: 100px; border: 2px solid #ff5252; 
+            animation: sos-pulse 2s infinite alternate; font-size: 22px; 
+            text-shadow: 0 0 10px #fff;
+        }
+        @keyframes sos-pulse { 
+            from { box-shadow: 0 0 10px #ff0000; } 
+            to { box-shadow: 0 0 30px #ff0000, inset 0 0 15px rgba(255,255,255,0.2); } 
         }
 
-        .header {
-            border-bottom: 1px solid #0f0;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-        }
+        .led { width: 8px; height: 8px; border-radius: 50%; background: #0f0; display: inline-block; margin-right: 5px; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
+
+        /* Rest of Popups */
+        #angelAlertBox { display: none; position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(139, 0, 0, 0.95); border-top: 3px solid #ff0000; padding: 35px 20px; z-index: 99999; backdrop-filter: blur(10px); }
+        #fakeCallScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: space-around; }
+        .id-box { background: rgba(0,0,0,0.8); padding: 20px; border-radius: 15px; border: 1px solid var(--neon-blue); margin-top: 20px; display: none; }
+        .id-input { width: 100%; padding: 12px; margin: 8px 0; background: #111; color: white; border: 1px solid #333; border-radius: 8px; font-family: 'Poppins'; }
+        #stealthOverlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 99998; }
     </style>
 </head>
-<body>
 
-    <canvas id="matrix-bg"></canvas>
-    <div id="overlay"></div>
+<body onclick="initAudio()">
 
-    <div class="terminal-window">
-        <div class="header">
-            <span>TERMINAL ID: PW_ROOT_X86</span>
-            <span>ENCRYPTION: AES-256-GCM</span>
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="header-container">
+        <div class="shield-wrapper" onclick="triggerUpload()">
+            <div class="pulse-ring"></div>
+            <div class="pulse-ring-inner"></div>
+            <div class="shield-outer"><div class="shield-inner" id="displayProfilePic"></div></div>
+            <div style="position:absolute; bottom:5px; right:5px; background:var(--neon-pink); border-radius:50%; width:35px; height:35px; display:flex; align-items:center; justify-content:center; border:2px solid #fff; box-shadow: 0 0 10px var(--neon-pink);"><i class="fas fa-camera" style="font-size:14px;"></i></div>
         </div>
-        <div id="console"></div>
-        <div id="progress-container" style="display:none;">
-            <p id="progress-text">FETCHING ENCRYPTED BLOCKS...</p>
-            <div id="progress-bar"></div>
+        <div class="user-name" id="displayHeaderName">Raksha User</div>
+        <div style="font-size:10px; color:var(--neon-blue); margin-top:5px; opacity:0.7; font-family:'Orbitron';">UID: RX-9902-SEC</div>
+        <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)" style="display:none;">
+    </div>
+
+    <div class="content-container">
+        <div style="display:flex; justify-content:space-between; font-size:10px; margin-bottom:20px; color:#aaa; font-family:'Orbitron'; letter-spacing:1px;">
+            <span><span class="led"></span>SYSTEM: <b style="color:var(--neon-blue)">ENCRYPTED</b></span>
+            <span id="angelStatus">ANGEL: OFF</span>
+        </div>
+
+        <button class="btn btn-sos" onclick="startEmergency('Manual SOS')">
+            <i class="fas fa-fingerprint"></i> INITIATE SOS
+        </button>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <button class="btn" onclick="manualLocation()"><i class="fas fa-crosshairs"></i> Loc Sync</button>
+            <button class="btn" onclick="makeCall()"><i class="fas fa-headset"></i> Secure Call</button>
+        </div>
+
+        <button id="guardBtn" class="btn" style="color:#ff9800; border-color:#ff9800;" onclick="toggleScreamGuard()">
+            <i class="fas fa-shield-virus"></i> SENSOR GUARD: OFF
+        </button>
+
+        <button class="btn" style="color:var(--neon-pink); border-color:var(--neon-pink);" onclick="triggerFakeCall()">
+            <i class="fas fa-user-secret"></i> GHOST PROTOCOL
+        </button>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <button class="btn" onclick="toggleSettings()"><i class="fas fa-sliders-h"></i> Config</button>
+            <button class="btn" onclick="openSecretMode()"><i class="fas fa-vault"></i> Vault</button>
+        </div>
+
+        <div class="id-box" id="settingsPanel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <span style="color:var(--neon-blue); font-weight:bold;">😇 ANGEL MODE</span>
+                <input type="checkbox" id="angelToggle" onchange="toggleAngelMode()">
+            </div>
+            <input type="text" id="userNameInput" class="id-input" placeholder="User Alias">
+            <input type="number" id="userChatId" class="id-input" placeholder="Telegram ID">
+            <input type="tel" id="userPhone" class="id-input" placeholder="Emergency Contact">
+            <button class="btn" style="background:var(--neon-blue); color:black; margin-top:10px;" onclick="saveSettings()">SAVE CORE DATA</button>
         </div>
     </div>
 
+    <div id="angelAlertBox">
+        <div style="color:#fff; font-family:'Orbitron'; letter-spacing:2px; margin-bottom:10px;">🚨 NEIGHBORHOOD ALERT</div>
+        <div id="victimDisplayName" style="font-size:20px; font-weight:bold; text-shadow:0 0 10px red;">VICTIM_NAME</div>
+        <div id="alertDist" style="color:#ff0; font-family:'Orbitron'; font-size:14px; margin:10px 0;">0.00 KM</div>
+        <button class="btn" style="background:white; color:red;" onclick="openMapToVictim()">INTERCEPT LOCATION</button>
+        <div onclick="closeAngelAlert()" style="color:#ddd; font-size:12px; margin-top:15px; cursor:pointer;">DISMISS</div>
+    </div>
+
+    <div id="fakeCallScreen">
+        <div style="text-align:center; color:white;">
+            <div style="width:100px; height:100px; background:#333; border-radius:50%; margin:0 auto 20px; display:flex; align-items:center; justify-content:center; font-size:40px;"><i class="fas fa-user-shield"></i></div>
+            <div style="font-size:28px; font-family:'Orbitron';">HEADQUARTERS</div>
+            <div style="color:var(--neon-blue);">Incoming Secure Line...</div>
+        </div>
+        <div style="display:flex; gap:50px;">
+            <button onclick="endFakeCall()" style="width:70px; height:70px; border-radius:50%; background:#ff3b30; border:none; color:white; font-size:24px;"><i class="fas fa-phone-slash"></i></button>
+            <button onclick="answerFakeCall()" style="width:70px; height:70px; border-radius:50%; background:#4cd964; border:none; color:white; font-size:24px; animation:pulse 1s infinite;"><i class="fas fa-phone"></i></button>
+        </div>
+    </div>
+
+    <div id="stealthOverlay" onclick="handleStealthTap()"></div>
+    <video id="hiddenVideo" autoplay playsinline muted style="display:none;"></video>
+
     <script>
-        // Matrix Background Effect
-        const canvas = document.getElementById('matrix-bg');
+        // --- KINETIC PARTICLES SCRIPT ---
+        const canvas = document.getElementById('bg-canvas');
         const ctx = canvas.getContext('2d');
+        let particles = [];
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%\"'#&_(),.;:?!\\|{}<>[]^~";
-        const fontSize = 16;
-        const columns = canvas.width/fontSize;
-        const rainDrops = Array.from({ length: columns }).fill(1);
 
-        function drawMatrix() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#0F0';
-            ctx.font = fontSize + 'px monospace';
-            for(let i = 0; i < rainDrops.length; i++) {
-                const text = alphabet.charAt(Math.floor(Math.random() * alphabet.length));
-                ctx.fillText(text, i*fontSize, rainDrops[i]*fontSize);
-                if(rainDrops[i]*fontSize > canvas.height && Math.random() > 0.975) rainDrops[i] = 0;
-                rainDrops[i]++;
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
             }
-        }
-        setInterval(drawMatrix, 30);
-
-        // Terminal Logic
-        const terminal = document.getElementById('console');
-        const progContainer = document.getElementById('progress-container');
-        const progBar = document.getElementById('progress-bar');
-
-        const logs = [
-            { text: "INITIALIZING TUNNELING PROTOCOL...", type: "white" },
-            { text: "PROXY: 124.89.0.1 (NEW DELHI, IN)", type: "green" },
-            { text: "SCANNING PW_SERVER DOMAINS...", type: "green" },
-            { text: "FIREWALL DETECTED: CLOUDFLARE_ENTERPRISE", type: "red" },
-            { text: "ATTEMPTING EXPLOIT: CVE-2025-GATEWAY_BYPASS...", type: "white" },
-            { text: "EXPLOIT SUCCESSFUL. PAYLOAD INJECTED.", type: "green" },
-            { text: "SEARCHING DIRECTORY: /ARCHIVE/NEET/2026/MILESTONES", type: "green" },
-            { text: "IDENTIFIED: MILESTONE_13_PAPER_PHASE_2.PDF", type: "white" },
-            { text: "BYPASSING PDF WATERMARK SECURITY...", type: "green" },
-            { text: "REQUESTING DOWNLOAD STREAM...", type: "white" }
-        ];
-
-        let i = 0;
-        function addLog() {
-            if (i < logs.length) {
-                const p = document.createElement('div');
-                p.className = `line ${logs[i].type}`;
-                p.innerHTML = `> ${logs[i].text}`;
-                terminal.appendChild(p);
-                i++;
-                setTimeout(addLog, 800);
-            } else {
-                startDownload();
+            update() {
+                this.x += this.speedX; this.y += this.speedY;
+                if (this.x > canvas.width) this.x = 0; if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0; if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(0, 242, 255, 0.5)';
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
             }
         }
 
-        function startDownload() {
-            progContainer.style.display = 'block';
-            let width = 0;
-            const interval = setInterval(() => {
-                if (width >= 100) {
-                    clearInterval(interval);
-                    const finish = document.createElement('div');
-                    finish.className = "line white";
-                    finish.innerHTML = "<br>> DOWNLOAD COMPLETE. DECRYPTING FOR ARYAN...";
-                    terminal.appendChild(finish);
-                    setTimeout(() => {
-                        window.location.href = "https://drive.google.com/file/d/11Ij0KuYmM3odiNzaQkIMYef3uRwrhcLR/view?usp=drivesdk";
-                    }, 1500);
-                } else {
-                    width += Math.random() * 5;
-                    progBar.style.width = Math.min(width, 100) + '%';
-                }
-            }, 100);
+        function initParticles() {
+            for (let i = 0; i < 50; i++) particles.push(new Particle());
         }
 
-        window.onload = addLog;
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        initParticles(); animate();
+
+        // --- ALL ORIGINAL FUNCTIONS (Copied from your file) ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyBRVPpAPAquoxRrMxSUbinZ9Z8bRIlB37M",
+            authDomain: "raksha-network-299bf.firebaseapp.com",
+            databaseURL: "https://raksha-network-299bf-default-rtdb.firebaseio.com",
+            projectId: "raksha-network-299bf",
+            storageBucket: "raksha-network-299bf.firebasestorage.app",
+            messagingSenderId: "142386072481",
+            appId: "1:142386072481:web:f6a896263035805d1b99e0"
+        };
+        if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
+        const db = firebase.database();
+        const BOT_TOKEN = "8378037937:AAGjuFdZWLnf0kFfTG_QIFCslgvrDMb-sC4";
+        let myLat=0, myLon=0, victimLat=0, victimLon=0, emergencyActive=false, isGuardActive=false, tapCount=0;
+        let ringtone = new Audio('https://upload.wikimedia.org/wikipedia/commons/e/e5/Nokia_tune_2012.ogg'); ringtone.loop = true;
+        let mediaRecorder, recordedChunks = [];
+
+        function initAudio() { console.log("Audio Ready"); }
+
+        navigator.geolocation.watchPosition(pos => {
+            myLat = pos.coords.latitude; myLon = pos.coords.longitude;
+        }, null, {enableHighAccuracy: true});
+
+        async function startEmergency(triggerType = "Manual") {
+            if(myLat === 0) {
+                navigator.geolocation.getCurrentPosition(p => {
+                    myLat = p.coords.latitude; myLon = p.coords.longitude;
+                    executeSOS(triggerType);
+                }, () => alert("GPS Error"));
+            } else { executeSOS(triggerType); }
+        }
+
+        async function executeSOS(triggerType) {
+            emergencyActive = true;
+            const chatID = localStorage.getItem("raksha_chat_id") || "8508792403";
+            const user = localStorage.getItem("raksha_user_name") || "User";
+            db.ref('global_alerts').push({ lat: myLat, lon: myLon, user, timestamp: Date.now() });
+            const msg = `🚨 SOS: ${triggerType}\n👤 User: ${user}\n📍 Loc: https://www.google.com/maps?q=${myLat},${myLon}`;
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${chatID}&text=${encodeURIComponent(msg)}`);
+            document.getElementById("stealthOverlay").style.display = "block";
+            // Background red flash
+            document.body.style.animation = "panic 0.5s infinite";
+        }
+
+        // Add this to style tag dynamically for SOS
+        const style = document.createElement('style');
+        style.innerHTML = "@keyframes panic { 0% { background: #000; } 50% { background: #500; } 100% { background: #000; } }";
+        document.head.appendChild(style);
+
+        // All other utility functions (Ghost call, save, etc.)
+        function triggerFakeCall() { document.getElementById("fakeCallScreen").style.display = "flex"; ringtone.play(); }
+        function endFakeCall() { document.getElementById("fakeCallScreen").style.display = "none"; ringtone.pause(); }
+        function answerFakeCall() { ringtone.pause(); window.speechSynthesis.speak(new SpeechSynthesisUtterance("Security team is approaching your location. Stay on the line.")); }
+        function toggleSettings() { const p = document.getElementById("settingsPanel"); p.style.display = (p.style.display === "block" ? "none" : "block"); }
+        function saveSettings() { 
+            localStorage.setItem("raksha_chat_id", document.getElementById("userChatId").value); 
+            localStorage.setItem("raksha_phone", document.getElementById("userPhone").value); 
+            localStorage.setItem("raksha_user_name", document.getElementById("userNameInput").value); 
+            alert("CONFIG UPDATED"); location.reload(); 
+        }
+        function manualLocation() { window.open(`https://wa.me/?text=Live Loc: https://www.google.com/maps?q=${myLat},${myLon}`); }
+        function makeCall() { window.location.href = "tel:" + (localStorage.getItem("raksha_phone") || ""); }
+        function triggerUpload() { document.getElementById('fileInput').click(); }
+        function handleImageUpload(e) { const file = e.target.files[0]; if(file) { const reader = new FileReader(); reader.onload = (ev) => { localStorage.setItem("raksha_pic", ev.target.result); document.getElementById("displayProfilePic").style.backgroundImage = `url(${ev.target.result})`; }; reader.readAsDataURL(file); } }
+        
+        window.onload = () => {
+            const pic = localStorage.getItem("raksha_pic"), name = localStorage.getItem("raksha_user_name");
+            if(pic) document.getElementById("displayProfilePic").style.backgroundImage = `url(${pic})`;
+            if(name) document.getElementById("displayHeaderName").innerText = name;
+            document.getElementById("userChatId").value = localStorage.getItem("raksha_chat_id") || "";
+            document.getElementById("userPhone").value = localStorage.getItem("raksha_phone") || "";
+            document.getElementById("userNameInput").value = name || "";
+        };
     </script>
 </body>
 </html>
